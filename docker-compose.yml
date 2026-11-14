@@ -1,0 +1,18 @@
+services:
+  woken-up:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: woken-up:dev
+    container_name: woken-up
+    network_mode: host 
+    ports:
+      - "8080:8080"
+    env_file: .env
+    restart: "no" 
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
