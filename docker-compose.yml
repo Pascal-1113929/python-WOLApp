@@ -6,8 +6,6 @@ services:
     image: woken-up:dev
     container_name: woken-up
     network_mode: host 
-    ports:
-      - "8080:8080"
     env_file: .env
     restart: "no" 
     healthcheck:
