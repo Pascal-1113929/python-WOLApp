@@ -1,0 +1,12 @@
+.idea
+.git
+.github
+.env
+.env.*
+__pycache__
+*.pyc
+.venv
+venv
+nginx
+README.md
+docker-compose.yml
