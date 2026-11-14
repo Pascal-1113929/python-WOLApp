@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wake Up</title>
+<style>
+  :root { --bg:#0f1117; --card:#1a1d27; --accent:#e94560; --ok:#2ecc71; --txt:#cdd6f4; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background:var(--bg); color:var(--txt); font-family:system-ui,sans-serif;
+         min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .card { background:var(--card); border-radius:16px; padding:2.5rem 2rem;
+          width:min(360px,90vw); text-align:center; box-shadow:0 8px 32px rgba(0,0,0,.4); }
+  h1 { font-size:1.1rem; font-weight:500; letter-spacing:.04em; margin-bottom:.35rem; }
+  .status { font-size:2rem; font-weight:700; margin:.8rem 0; transition:color .3s; }
+  .status.down   { color:#f38ba8; }
+  .status.waking { color:#f9e2af; }
+  .status.up     { color:var(--ok); }
+  .mac { font-size:.78rem; color:#6c7086; margin-bottom:1.4rem; word-break:break-all; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:10px;
+           padding:.9rem 2.2rem; font-size:1rem; font-weight:600; cursor:pointer;
+           transition:transform .1s, opacity .2s; }
+  button:active { transform:scale(.96); }
+  button:disabled { opacity:.45; cursor:default; }
+  .err { font-size:.75rem; color:#f38ba8; margin-top:.8rem; min-height:1.2em; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>WOKEN UP</h1>
+  <div id="status" class="status down">...</div>
+  <div id="mac" class="mac"></div>
+  <button id="btn" onclick="wake()">WAKE IT</button>
+  <div id="err" class="err"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+async function j(url, opts) { const r = await fetch(url, opts); return r.json(); }
+
+async function init() {
+  try {
+    const d = await j('/api/init');
+    if (d.macs && d.macs.length) $('mac').textContent = 'MAC  ' + d.macs[0];
+    setStatus(d.up ? 'up' : 'down', d.up ? 'AWAKE' : 'ASLEEP');
+  } catch { setStatus('down','ASLEEP'); }
+}
+function setStatus(cls, txt) {
+  const el = $('status'); el.className = 'status ' + cls; el.textContent = txt;
+}
+async function wake() {
+  $('btn').disabled = true; $('err').textContent = '';
+  setStatus('waking', 'WAKING...');
+  try {
+    const d = await j('/api/wake', { method: 'POST' });
+    if (!d.ok) throw new Error(d.error || 'send failed');
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const s = await j('/api/status');
+      if (s.up) { setStatus('up','AWAKE'); return; }
+    }
+    $('err').textContent = 'sent, but still no ping. check the room.';
+    setStatus('down','ASLEEP');
+  } catch (e) {
+    $('err').textContent = e.message; setStatus('down','ASLEEP');
+  }
+  $('btn').disabled = false;
+}
+setInterval(async () => {
+  try { const s = await j('/api/status'); setStatus(s.up?'up':'down', s.up?'AWAKE':'ASLEEP'); }
+  catch {}
+}, 10000);
+init();
+</script>
+</body>
+</html> 
