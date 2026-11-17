@@ -5,7 +5,8 @@ on:
     tags: ["v*"]
 
 env:
-  IMAGE: ghcr.io/pascal-1113929/python-wolapp
+  REGISTRY: ghcr.io
+  IMAGE_NAME: pascal-1113929/python-wolapp
 
 jobs:
   build-and-push:
